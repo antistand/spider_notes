@@ -1,0 +1,180 @@
+1) requests 模块
+   集成了urllib3 的网络请求、请求头、Cookie、代理等功能，封装了方便使用的函数。
+
+   注： 请求的参数的数据，不需要urlencode,自动处理
+   提供了网络请求的get/post/put/delete/patch等相关的函数
+   支持上传文件、上传表单数据，下载json/解析、
+   在响应的对象可以获取：
+    状态码(status_code)、
+    原始响应对象(raw： HttpResponse)、
+    网页内容(text)、
+    字节码内容(content)、
+    响应头内容(headers)、
+    Cookies内容(cookies)、
+    json数据(json())
+
+2) 安装requests库
+   pip install requests
+
+3) 导包
+   import requests as rq
+
+
+2. 云打码：
+  1）注册开发者账号
+    创建app（软件）：
+    软件代码: 5100
+    通讯密钥: 2a05b965cea25e3a378bc2955c4756a5
+
+  2) 注册普通用户
+     充值
+
+
+---------------------------------------------模拟浏览器------------------------------------------
+
+1. 配置chromedriver，可执行文件
+    1. chromedriver.exe 文件复制到项目中
+
+    resp = request.urlopen(url)
+    resp.status == 200
+    bytes = resp.read()
+
+    resp.getheaders()/resp.info() 响应头信息
+
+2. urllib.request.Request 请求类
+    作用： 封装请求头和数据
+
+    get请求：
+        req = Request(url, headers=headers)
+        resp = request.urlopen(req)
+
+    post请求：
+        req = Request(url, data=data, headers=headers)
+        resp = request.urlopen(req)
+
+    额外的处理：
+        请求参数编码问题（解决中文参数值）
+        urllib.parse.urlencode({"wd": "狄", "limit": 20})
+
+        urllib.parse.quote('狄')返回urlencode()编码的字符串
+        urllib.parse.unquote('%ab%dc%a2...') urlencode编码之后的解码
+
+3. opener和handler组合使用（实现浏览器功能）
+    普通的HTTP请求协议的处理器
+    handler: urllib.request.HTTPHandler()
+
+    可以处理Cookie信息的HTTP处理器
+    urllib.request.HTTPCookieProcessor(http.cookiejar())
+
+    代理处理器：
+    urllib.request.ProxyHandler(proxies={"http":"120.13.44.80:808"})
+
+    构建opener打开浏览器
+    urllib.request.build_openner(*handler)  # handler1, handler2, handler3可以多个参数传值
+
+    通过openner打开请求
+    resp = opener.open(req)
+
+4. 数据解析
+    html数据解析(xpath, beautifulSoup)
+    json数据解析(json.loads(), json.dumps())
+
+    json数组： [ {}, {} ]  --> list[dict]
+    json对象： {"data": [{}, {}, {}]}  --> dict[list[dict]]
+
+    xpath:
+        安装： lxml
+        /div/a  绝对位置
+        a 绝对位置
+        //div[@class="content_left"]/div//h3/a  多级标签省略查询可以使用 // 双斜杠
+
+5. requests模块功能
+    集成了urllib3 的网络请求，请求头，Cookie，代理等功能，封装了方便使用的函数
+
+    注：请求的参数的数据，不需要urlencode，自动会进行处理
+    提供了网络请求的get/post/put/delete/patch/等相关函数
+    支持上传文件，上传表单数据，下载json/解析json，代理处理等方法
+    在响应的对象中，可以获取状态吗（status_code)，
+    原始响应对象(raw: HttpResponse)，
+    网页内容(text)
+    字节码内容（content)
+    响应头内容（headers）
+    Cookies内容（cookies）
+    json数据（json())
+
+6. 安装requests库
+    pip install requests
+
+7. 导包
+    import requests as reqs
+
+
+------------------------------------------爬虫框架--------------------------------------------
+
+1. pip install scrapy
+2. 创建scrapy项目
+    a. 查看scrapy命令帮助
+        scrapy -h
+    b. scrapy startproject qiubai: 通过scrapy开始创建一个糗百项目
+    c. 开始创建爬虫脚本
+        cd qiubai: 先进到qiubai 目录里面
+        再使用scrapy genspider qb www.qiushibaike.com: 生成蜘蛛，qb是脚本的名字，后面跟着站点域名
+    d. 开始创建
+        cd xxx项目名
+        scrapy genspider spider名 域名(host)
+
+        如： cd qiubai
+             scrapy genspider qb www.qiushibaike.com
+             创建成功之后，会在qiubai/qiubai/spiders/db.py 自动创建
+        在qb.py文本中，声明了一个类QbSpider继承(scrapy.Spider)
+
+        在此爬虫类中，声明三个属性：
+            name  爬虫的名称
+            allowed_domain = []  允许访问的域名 服务器
+            start_urls = ['']  爬虫爬取的入口
+
+        声明了一个回调函数
+            def parse(self, response):
+                pass
+
+            parse函数主要用于请求后的数据解析
+
+    e. 运行爬虫qb
+        scrapy -h 查看运行爬虫的命令
+        scrapy crawl -h 查看爬虫的运行命令详情
+        scrapy crawl qb 开始运行爬虫
+
+    f.  spider: 爬取数据
+        items: 将数据结构化，用管道存入数据库
+        middlewares: 业务逻辑处理，相关命令也由中间键处理
+        pipelines: 与数据库结合，将结构化后的数据存入数据库
+
+3. 处理过程
+    a. 核心engine：框架核心引擎
+        scrapy crawl qb：运行的核心代码(engine)
+
+        以settings为基准，发送网络请求
+            start_urls --> 将所有的链接请求压入scheduler队列 --> 给下载器Downloader
+            --> 下载之后， parse = qb(QiubaiSpider).parse(response)
+            item = next(parse)  # 从parse解析器中获取 item，解一个走一个
+
+        从settings拿到ITEM_PIPELINES管道类：
+            获取处理item的管道类对象，调用他的process_item(item, qb)，获取数据，处理与数据库数据存储
+
+4. 简单测试：
+    在黑窗口输入此命令：scrapy shell https://www.qiushibaike.com/，进入测试环境
+    view(response)    View response in a browser
+    rel = response
+    next_url = rel.xpath('//ul[@class="pagination"]/li[last()]/a/@href').extract()
+    next_page_url = response.urljoin(next_url[0])
+    # //div[starts-with(@class, 'title_all')]//font，以什么什么开始
+
+
+
+
+
+
+
+
+
+
